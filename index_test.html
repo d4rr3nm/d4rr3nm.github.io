@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shift Roster Calendar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; padding: 0 !important; }
+      .print-shadow-none { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Controls Header -->
+    <header class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 no-print space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Shift Roster Calendar</h1>
+          <p class="text-sm text-slate-500">28-Day Rotating Shift Schedule</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- View Toggle -->
+          <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+            <button id="view-month-btn" class="px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-slate-800">Monthly View</button>
+            <button id="view-year-btn" class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900">Yearly Overview</button>
+          </div>
+
+          <!-- Print Button -->
+          <button onclick="window.print()" class="px-3 py-1.5 text-sm font-medium border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-lg flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Print
+          </button>
+        </div>
+      </div>
+
+      <!-- Config Controls -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Roster Pattern</label>
+          <select id="pattern-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="pattern1">4 Panel Roster</option>
+            <option value="pattern2">Lifestyle Roster</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Shift / Team</label>
+          <select id="team-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <option value="0">Team C</option>
+            <option value="7">Team B</option>
+            <option value="14">Team A</option>
+            <option value="21">Team D</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Anchor Date (Team C Base)</label>
+          <input type="date" id="anchor-date-input" value="2026-01-12" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Year</label>
+          <select id="year-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- Legend & Stats -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 print-shadow-none">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-4">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Legend:</span>
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 flex items-center justify-center rounded-md bg-amber-600 text-white font-bold text-xs">D</span>
+            <span class="text-sm text-slate-700">Day Shift (12h)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 flex items-center justify-center rounded-md bg-indigo-900 text-white font-bold text-xs">N</span>
+            <span class="text-sm text-slate-700">Night Shift (12h)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 border border-slate-300 text-slate-600 font-bold text-xs">O</span>
+            <span class="text-sm text-slate-700">Off Shift</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Month Metrics -->
+        <div id="month-metrics" class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 text-xs text-slate-600">
+          <!-- Populated via JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Navigation Header (Monthly View) -->
+    <div id="month-nav-bar" class="flex items-center justify-between bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200 no-print">
+      <div class="flex items-center gap-2">
+        <button id="prev-month" class="p-2 rounded-lg hover:bg-slate-100 text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="today-btn" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-md text-slate-700">Today</button>
+        <button id="next-month" class="p-2 rounded-lg hover:bg-slate-100 text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+
+      <h2 id="current-month-label" class="text-lg font-bold text-slate-900"></h2>
+      <div class="w-24"></div>
+    </div>
+
+    <!-- MAIN VIEW CONTAINER -->
+    <main>
+      <!-- Monthly Grid -->
+      <div id="monthly-view" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print-shadow-none">
+        <div class="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center font-bold text-xs text-slate-600 uppercase py-3">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+        <div id="monthly-grid" class="grid grid-cols-7 divide-x divide-y divide-slate-200">
+          <!-- Days populated via JS -->
+        </div>
+      </div>
+
+      <!-- Yearly Overview Grid -->
+      <div id="yearly-view" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- 12 Months populated via JS -->
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // Patterns Definition
+    const PATTERNS = {
+      pattern1: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel
+      pattern2: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle
+    };
+
+    const SHIFT_DETAILS = {
+      'D': { title: 'Day Shift', bg: 'bg-amber-600', text: 'text-white', border: 'border-amber-700' },
+      'N': { title: 'Night Shift', bg: 'bg-indigo-900', text: 'text-white', border: 'border-indigo-950' },
+      'O': { title: 'Off Shift', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' }
+    };
+
+    // App State
+    let currentDate = new Date();
+    let currentView = 'month';
+
+    // DOM Elements
+    const yearSelect = document.getElementById('year-select');
+    const teamSelect = document.getElementById('team-select');
+    const patternSelect = document.getElementById('pattern-select');
+    const anchorDateInput = document.getElementById('anchor-date-input');
+    const viewMonthBtn = document.getElementById('view-month-btn');
+    const viewYearBtn = document.getElementById('view-year-btn');
+    const monthlyView = document.getElementById('monthly-view');
+    const yearlyView = document.getElementById('yearly-view');
+    const monthNavBar = document.getElementById('month-nav-bar');
+    const monthlyGrid = document.getElementById('monthly-grid');
+    const currentMonthLabel = document.getElementById('current-month-label');
+    const monthMetrics = document.getElementById('month-metrics');
+
+    // Init Year Dropdown (2020 - 2040)
+    for (let y = 2020; y <= 2040; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentDate.getFullYear()) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    // Helper: Calculate Shift for a specific Date
+    function getShiftForDate(date) {
+      const anchorStr = anchorDateInput.value;
+      const [aYear, aMonth, aDay] = anchorStr.split('-').map(Number);
+      const anchorDate = new Date(aYear, aMonth - 1, aDay);
+
+      // Normalize midnight
+      const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const baseAnchor = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+
+      const diffDays = Math.round((target - baseAnchor) / (1000 * 60 * 60 * 24));
+      const teamOffset = parseInt(teamSelect.value, 10);
+      
+      const patternKey = patternSelect.value;
+      const patternStr = PATTERNS[patternKey];
+      const cycleLen = patternStr.length;
+
+      // Adjust pattern index for team offset
+      const netDays = diffDays - teamOffset;
+      const index = ((netDays % cycleLen) + cycleLen) % cycleLen;
+
+      return patternStr[index];
+    }
+
+    // Render Monthly View
+    function renderMonthlyView() {
+      monthly
