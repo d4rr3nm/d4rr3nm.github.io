@@ -69,7 +69,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight leading-tight">Shift Roster Calendar</h1>
-                    <p class="text-xs text-slate-400 font-medium">28-Day Pattern: <span class="font-mono text-amber-400">DDOONNNOODDOOONNOODDDOONNOOO</span></p>
+                    <p class="text-xs text-slate-400 font-medium">28-Day Pattern: <span class="font-mono text-amber-400">DDNNOOOOODDNNNOOOODDDNNOOOOO</span></p>
                 </div>
             </div>
 
@@ -152,7 +152,7 @@
 
                 <!-- Cycle Specs -->
                 <div class="text-xs text-slate-500 font-medium">
-                    Anchor Start: <span class="font-bold text-slate-800">Jan 12, 2026</span> (Day 1)
+                    Anchor Start: <span class="font-bold text-slate-800">Nov 16, 2026</span> (Day 1)
                 </div>
             </div>
         </section>
@@ -252,18 +252,18 @@
     <!-- Footer -->
     <footer class="mt-auto bg-white border-t border-slate-200 py-4 no-print">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 font-medium">
-            28-Day Rotating Shift Roster • Cycle Anchor: January 12, 2026
+            28-Day Rotating Shift Roster • Cycle Anchor: November 16, 2026
         </div>
     </footer>
 
     <!-- Roster Engine Logic -->
     <script>
         // Core Cycle Pattern & Parameters
-        const PATTERN = "DDOONNNOODDOOONNOODDDOONNOOO"; // 28 Days Exact
+        const PATTERN = "DDNNOOOOODDNNNOOOODDDNNOOOOO"; // 28 Days Exact
         const CYCLE_LENGTH = 28;
         
-        // Exact Anchor Date: Jan 12, 2026 (Day 0 index, Cycle Day 1)
-        const ANCHOR_DATE = new Date(2026, 0, 12); 
+        // Exact Anchor Date: Nov 16, 2026 (Day 0 index, Cycle Day 1)
+        const ANCHOR_DATE = new Date(2026, 11, 16); 
 
         // State & Security
         let currentView = 'month'; // 'month' | 'year'
