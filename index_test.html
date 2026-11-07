@@ -68,7 +68,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Year</label>
           <select id="year-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <!-- Populated via JS -->
+            <!-- Populated dynamically via JS -->
           </select>
         </div>
       </div>
@@ -140,52 +140,46 @@
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Patterns Definition
-    const PATTERNS = {
-      pattern1: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel
-      pattern2: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+      // Patterns Definition
+      const PATTERNS = {
+        pattern1: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle
+        pattern2: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel
+      };
 
-    const SHIFT_DETAILS = {
-      'D': { title: 'Day Shift', bg: 'bg-amber-600', text: 'text-white', border: 'border-amber-700' },
-      'N': { title: 'Night Shift', bg: 'bg-indigo-900', text: 'text-white', border: 'border-indigo-950' },
-      'O': { title: 'Off Shift', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' }
-    };
+      const SHIFT_DETAILS = {
+        'D': { title: 'Day Shift', bg: 'bg-amber-600', text: 'text-white', border: 'border-amber-700' },
+        'N': { title: 'Night Shift', bg: 'bg-indigo-900', text: 'text-white', border: 'border-indigo-950' },
+        'O': { title: 'Off Shift', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' }
+      };
 
-    // Initialize state to exact current date (real-time month & year)
-    let currentDate = new Date();
-    let currentView = 'month';
+      // App State: Initialized to current system date (today)
+      let currentDate = new Date();
+      let currentView = 'month';
 
-    // DOM Elements
-    const yearSelect = document.getElementById('year-select');
-    const teamSelect = document.getElementById('team-select');
-    const patternSelect = document.getElementById('pattern-select');
-    const anchorDateInput = document.getElementById('anchor-date-input');
-    const viewMonthBtn = document.getElementById('view-month-btn');
-    const viewYearBtn = document.getElementById('view-year-btn');
-    const monthlyView = document.getElementById('monthly-view');
-    const yearlyView = document.getElementById('yearly-view');
-    const monthNavBar = document.getElementById('month-nav-bar');
-    const monthlyGrid = document.getElementById('monthly-grid');
-    const currentMonthLabel = document.getElementById('current-month-label');
-    const monthMetrics = document.getElementById('month-metrics');
+      // DOM Elements
+      const yearSelect = document.getElementById('year-select');
+      const teamSelect = document.getElementById('team-select');
+      const patternSelect = document.getElementById('pattern-select');
+      const anchorDateInput = document.getElementById('anchor-date-input');
+      const viewMonthBtn = document.getElementById('view-month-btn');
+      const viewYearBtn = document.getElementById('view-year-btn');
+      const monthlyView = document.getElementById('monthly-view');
+      const yearlyView = document.getElementById('yearly-view');
+      const monthNavBar = document.getElementById('month-nav-bar');
+      const monthlyGrid = document.getElementById('monthly-grid');
+      const currentMonthLabel = document.getElementById('current-month-label');
+      const monthMetrics = document.getElementById('month-metrics');
 
-    // Init Year Dropdown & select current year
-    yearSelect.innerHTML = '';
-    for (let y = 2020; y <= 2040; y++) {
-      const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = y;
-      if (y === currentDate.getFullYear()) opt.selected = true;
-      yearSelect.appendChild(opt);
-    }
-
-    // ... Rest of getShiftForDate, renderMonthlyView, renderYearlyView ...
-
-    // Initial Execution to render current month automatically
-    updateDisplay();
-  });
+      // Populate Year Dropdown (2020 - 2040) and set selection to current year
+      yearSelect.innerHTML = '';
+      for (let y = 2020; y <= 2040; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentDate.getFullYear()) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
 
       // Helper: Calculate Shift for a specific Date
       function getShiftForDate(date) {
@@ -385,7 +379,7 @@
         updateDisplay();
       });
 
-      // Initial Execution
+      // Initial execution: automatically renders current real-time month and year
       updateDisplay();
     });
   </script>
