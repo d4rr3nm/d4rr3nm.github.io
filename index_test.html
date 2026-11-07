@@ -40,35 +40,30 @@
         </div>
       </div>
 
-      <!-- Config Controls -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+      <!-- Config Controls (Anchor Date removed) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Roster Pattern</label>
           <select id="pattern-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <option value="pattern1">Lifestyle Roster</option>
-            <option value="pattern2">4 Panel Roster</option>
+            <option value="pattern1">4 Panel Roster (DDOONNNO...)</option>
+            <option value="pattern2">Lifestyle Roster (DDNNOOOO...)</option>
           </select>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Shift / Team</label>
           <select id="team-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <option value="0">Team C</option>
-            <option value="7">Team B</option>
-            <option value="14">Team A</option>
-            <option value="21">Team D</option>
+            <option value="0">Team C (Base Anchor)</option>
+            <option value="7">Team B (+7 Days Offset)</option>
+            <option value="14">Team A (+14 Days Offset)</option>
+            <option value="21">Team D (+21 Days Offset)</option>
           </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Anchor Date (Team C Base)</label>
-          <input type="date" id="anchor-date-input" value="2026-01-12" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Year</label>
           <select id="year-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <!-- Populated dynamically via JS -->
+            <!-- Populated via JS -->
           </select>
         </div>
       </div>
@@ -140,11 +135,15 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Patterns Definition
+    (function initCalendar() {
+      // Hardcoded Baseline Anchor Date for Team C: Jan 12, 2026
+      const ANCHOR_YEAR = 2026;
+      const ANCHOR_MONTH = 0; // 0-indexed (January)
+      const ANCHOR_DAY = 12;
+
       const PATTERNS = {
-        pattern1: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle
-        pattern2: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel
+        pattern1: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel Roster
+        pattern2: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle Roster
       };
 
       const SHIFT_DETAILS = {
@@ -153,177 +152,168 @@
         'O': { title: 'Off Shift', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' }
       };
 
-      // App State: Initialized to current system date (today)
       let currentDate = new Date();
       let currentView = 'month';
 
-      // DOM Elements
-      const yearSelect = document.getElementById('year-select');
-      const teamSelect = document.getElementById('team-select');
-      const patternSelect = document.getElementById('pattern-select');
-      const anchorDateInput = document.getElementById('anchor-date-input');
-      const viewMonthBtn = document.getElementById('view-month-btn');
-      const viewYearBtn = document.getElementById('view-year-btn');
-      const monthlyView = document.getElementById('monthly-view');
-      const yearlyView = document.getElementById('yearly-view');
-      const monthNavBar = document.getElementById('month-nav-bar');
-      const monthlyGrid = document.getElementById('monthly-grid');
-      const currentMonthLabel = document.getElementById('current-month-label');
-      const monthMetrics = document.getElementById('month-metrics');
+      function renderApp() {
+        const yearSelect = document.getElementById('year-select');
+        const teamSelect = document.getElementById('team-select');
+        const patternSelect = document.getElementById('pattern-select');
+        const viewMonthBtn = document.getElementById('view-month-btn');
+        const viewYearBtn = document.getElementById('view-year-btn');
+        const monthlyView = document.getElementById('monthly-view');
+        const yearlyView = document.getElementById('yearly-view');
+        const monthNavBar = document.getElementById('month-nav-bar');
+        const monthlyGrid = document.getElementById('monthly-grid');
+        const currentMonthLabel = document.getElementById('current-month-label');
+        const monthMetrics = document.getElementById('month-metrics');
 
-      // Populate Year Dropdown (2020 - 2040) and set selection to current year
-      yearSelect.innerHTML = '';
-      for (let y = 2020; y <= 2040; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        if (y === currentDate.getFullYear()) opt.selected = true;
-        yearSelect.appendChild(opt);
-      }
+        if (!yearSelect || !monthlyGrid) return;
 
-      // Helper: Calculate Shift for a specific Date
-      function getShiftForDate(date) {
-        const anchorStr = anchorDateInput.value || '2026-01-12';
-        const parts = anchorStr.split('-');
-        const aYear = parseInt(parts[0], 10);
-        const aMonth = parseInt(parts[1], 10) - 1;
-        const aDay = parseInt(parts[2], 10);
-
-        const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const baseAnchor = new Date(aYear, aMonth, aDay);
-
-        const diffDays = Math.round((target - baseAnchor) / (1000 * 60 * 60 * 24));
-        const teamOffset = parseInt(teamSelect.value, 10);
-        
-        const patternKey = patternSelect.value;
-        const patternStr = PATTERNS[patternKey] || PATTERNS.pattern1;
-        const cycleLen = patternStr.length;
-
-        const netDays = diffDays - teamOffset;
-        const index = ((netDays % cycleLen) + cycleLen) % cycleLen;
-
-        return patternStr[index];
-      }
-
-      // Render Monthly View
-      function renderMonthlyView() {
-        monthlyGrid.innerHTML = '';
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-
-        currentMonthLabel.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-
-        const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-
-        let startDay = (firstDayOfMonth.getDay() + 6) % 7;
-        let totalDays = lastDayOfMonth.getDate();
-
-        let counts = { 'D': 0, 'N': 0, 'O': 0 };
-
-        const prevMonthLastDay = new Date(year, month, 0).getDate();
-        for (let i = startDay - 1; i >= 0; i--) {
-          const d = new Date(year, month - 1, prevMonthLastDay - i);
-          const shift = getShiftForDate(d);
-          monthlyGrid.appendChild(createCell(d, shift, true));
+        // Populate Year Dropdown once
+        if (yearSelect.children.length === 0) {
+          for (let y = 2020; y <= 2040; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === currentDate.getFullYear()) opt.selected = true;
+            yearSelect.appendChild(opt);
+          }
+        } else {
+          yearSelect.value = currentDate.getFullYear();
         }
 
-        for (let day = 1; day <= totalDays; day++) {
-          const d = new Date(year, month, day);
-          const shift = getShiftForDate(d);
-          counts[shift]++;
-          monthlyGrid.appendChild(createCell(d, shift, false));
-        }
+        function getShiftForDate(date) {
+          const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          const baseAnchor = new Date(ANCHOR_YEAR, ANCHOR_MONTH, ANCHOR_DAY);
 
-        const remainingCells = (7 - (monthlyGrid.children.length % 7)) % 7;
-        for (let day = 1; day <= remainingCells; day++) {
-          const d = new Date(year, month + 1, day);
-          const shift = getShiftForDate(d);
-          monthlyGrid.appendChild(createCell(d, shift, true));
-        }
-
-        const workHours = (counts['D'] + counts['N']) * 12;
-        monthMetrics.innerHTML = `
-          <div><strong class="text-amber-700">${counts['D']}</strong> Days</div>
-          <div class="h-3 w-px bg-slate-300"></div>
-          <div><strong class="text-indigo-900">${counts['N']}</strong> Nights</div>
-          <div class="h-3 w-px bg-slate-300"></div>
-          <div><strong class="text-slate-600">${counts['O']}</strong> Off</div>
-          <div class="h-3 w-px bg-slate-300"></div>
-          <div><strong class="text-slate-900">${workHours}h</strong> Total</div>
-        `;
-      }
-
-      // Helper: Create Cell Node for Month View
-      function createCell(date, shiftCode, isDimmed) {
-        const cell = document.createElement('div');
-        const shift = SHIFT_DETAILS[shiftCode];
-        const isToday = date.toDateString() === new Date().toDateString();
-
-        cell.className = `min-h-[90px] p-2 border-slate-200 flex flex-col justify-between ${isDimmed ? 'bg-slate-50 text-slate-400' : 'bg-white'}`;
-        if (isToday) cell.classList.add('ring-2', 'ring-amber-500', 'ring-inset');
-
-        cell.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="text-sm font-semibold ${isToday ? 'text-amber-600 font-bold' : ''}">${date.getDate()}</span>
-          </div>
-          <div class="mt-2">
-            <div class="w-full py-1.5 px-2 rounded-md ${shift.bg} ${shift.text} font-bold text-center text-xs shadow-sm">
-              ${shift.title}
-            </div>
-          </div>
-        `;
-        return cell;
-      }
-
-      // Render Yearly Overview
-      function renderYearlyView() {
-        yearlyView.innerHTML = '';
-        const year = currentDate.getFullYear();
-
-        for (let m = 0; m < 12; m++) {
-          const monthCard = document.createElement('div');
-          monthCard.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-4 print-shadow-none';
-
-          const monthName = new Date(year, m, 1).toLocaleString('default', { month: 'long' });
+          const diffDays = Math.round((target - baseAnchor) / (1000 * 60 * 60 * 24));
+          const teamOffset = parseInt(teamSelect ? teamSelect.value : 0, 10);
           
-          let gridHTML = `
-            <h3 class="text-md font-bold text-slate-800 mb-3">${monthName} ${year}</h3>
-            <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-slate-400 uppercase mb-1">
-              <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center text-xs">
-          `;
+          const patternKey = patternSelect ? patternSelect.value : 'pattern1';
+          const patternStr = PATTERNS[patternKey] || PATTERNS.pattern1;
+          const cycleLen = patternStr.length;
 
-          const firstDay = new Date(year, m, 1);
-          const lastDay = new Date(year, m + 1, 0).getDate();
-          let startDay = (firstDay.getDay() + 6) % 7;
+          const netDays = diffDays - teamOffset;
+          const index = ((netDays % cycleLen) + cycleLen) % cycleLen;
 
-          for (let i = 0; i < startDay; i++) {
-            gridHTML += `<div></div>`;
-          }
-
-          for (let d = 1; d <= lastDay; d++) {
-            const date = new Date(year, m, d);
-            const shift = getShiftForDate(date);
-            const details = SHIFT_DETAILS[shift];
-            const isToday = date.toDateString() === new Date().toDateString();
-
-            gridHTML += `
-              <div class="aspect-square flex items-center justify-center rounded ${details.bg} ${details.text} ${details.border} border font-bold text-[11px] ${isToday ? 'ring-2 ring-amber-500' : ''}" title="${date.toDateString()}: ${details.title}">
-                ${d}
-              </div>
-            `;
-          }
-
-          gridHTML += `</div>`;
-          monthCard.innerHTML = gridHTML;
-          yearlyView.appendChild(monthCard);
+          return patternStr[index];
         }
-      }
 
-      // View Switching & Updates
-      function updateDisplay() {
+        function createCell(date, shiftCode, isDimmed) {
+          const cell = document.createElement('div');
+          const shift = SHIFT_DETAILS[shiftCode];
+          const isToday = date.toDateString() === new Date().toDateString();
+
+          cell.className = `min-h-[90px] p-2 border-slate-200 flex flex-col justify-between ${isDimmed ? 'bg-slate-50 text-slate-400' : 'bg-white'}`;
+          if (isToday) cell.classList.add('ring-2', 'ring-amber-500', 'ring-inset');
+
+          cell.innerHTML = `
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold ${isToday ? 'text-amber-600 font-bold' : ''}">${date.getDate()}</span>
+            </div>
+            <div class="mt-2">
+              <div class="w-full py-1.5 px-2 rounded-md ${shift.bg} ${shift.text} font-bold text-center text-xs shadow-sm">
+                ${shift.title}
+              </div>
+            </div>
+          `;
+          return cell;
+        }
+
+        function renderMonthlyView() {
+          monthlyGrid.innerHTML = '';
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth();
+
+          currentMonthLabel.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+          const firstDayOfMonth = new Date(year, month, 1);
+          const lastDayOfMonth = new Date(year, month + 1, 0);
+
+          let startDay = (firstDayOfMonth.getDay() + 6) % 7;
+          let totalDays = lastDayOfMonth.getDate();
+
+          let counts = { 'D': 0, 'N': 0, 'O': 0 };
+
+          const prevMonthLastDay = new Date(year, month, 0).getDate();
+          for (let i = startDay - 1; i >= 0; i--) {
+            const d = new Date(year, month - 1, prevMonthLastDay - i);
+            const shift = getShiftForDate(d);
+            monthlyGrid.appendChild(createCell(d, shift, true));
+          }
+
+          for (let day = 1; day <= totalDays; day++) {
+            const d = new Date(year, month, day);
+            const shift = getShiftForDate(d);
+            counts[shift]++;
+            monthlyGrid.appendChild(createCell(d, shift, false));
+          }
+
+          const remainingCells = (7 - (monthlyGrid.children.length % 7)) % 7;
+          for (let day = 1; day <= remainingCells; day++) {
+            const d = new Date(year, month + 1, day);
+            const shift = getShiftForDate(d);
+            monthlyGrid.appendChild(createCell(d, shift, true));
+          }
+
+          const workHours = (counts['D'] + counts['N']) * 12;
+          monthMetrics.innerHTML = `
+            <div><strong class="text-amber-700">${counts['D']}</strong> Days</div>
+            <div class="h-3 w-px bg-slate-300"></div>
+            <div><strong class="text-indigo-900">${counts['N']}</strong> Nights</div>
+            <div class="h-3 w-px bg-slate-300"></div>
+            <div><strong class="text-slate-600">${counts['O']}</strong> Off</div>
+            <div class="h-3 w-px bg-slate-300"></div>
+            <div><strong class="text-slate-900">${workHours}h</strong> Total</div>
+          `;
+        }
+
+        function renderYearlyView() {
+          yearlyView.innerHTML = '';
+          const year = currentDate.getFullYear();
+
+          for (let m = 0; m < 12; m++) {
+            const monthCard = document.createElement('div');
+            monthCard.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-4 print-shadow-none';
+
+            const monthName = new Date(year, m, 1).toLocaleString('default', { month: 'long' });
+            
+            let gridHTML = `
+              <h3 class="text-md font-bold text-slate-800 mb-3">${monthName} ${year}</h3>
+              <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-slate-400 uppercase mb-1">
+                <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+              </div>
+              <div class="grid grid-cols-7 gap-1 text-center text-xs">
+            `;
+
+            const firstDay = new Date(year, m, 1);
+            const lastDay = new Date(year, m + 1, 0).getDate();
+            let startDay = (firstDay.getDay() + 6) % 7;
+
+            for (let i = 0; i < startDay; i++) {
+              gridHTML += `<div></div>`;
+            }
+
+            for (let d = 1; d <= lastDay; d++) {
+              const date = new Date(year, m, d);
+              const shift = getShiftForDate(date);
+              const details = SHIFT_DETAILS[shift];
+              const isToday = date.toDateString() === new Date().toDateString();
+
+              gridHTML += `
+                <div class="aspect-square flex items-center justify-center rounded ${details.bg} ${details.text} ${details.border} border font-bold text-[11px] ${isToday ? 'ring-2 ring-amber-500' : ''}" title="${date.toDateString()}: ${details.title}">
+                  ${d}
+                </div>
+              `;
+            }
+
+            gridHTML += `</div>`;
+            monthCard.innerHTML = gridHTML;
+            yearlyView.appendChild(monthCard);
+          }
+        }
+
         if (currentView === 'month') {
           monthlyView.classList.remove('hidden');
           yearlyView.classList.add('hidden');
@@ -335,53 +325,56 @@
           monthNavBar.classList.add('hidden');
           renderYearlyView();
         }
+
+        // Attach event handlers once
+        if (!window._calendarEventsAttached) {
+          viewMonthBtn.addEventListener('click', () => {
+            currentView = 'month';
+            viewMonthBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-slate-800";
+            viewYearBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900";
+            renderApp();
+          });
+
+          viewYearBtn.addEventListener('click', () => {
+            currentView = 'year';
+            viewYearBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-slate-800";
+            viewMonthBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900";
+            renderApp();
+          });
+
+          yearSelect.addEventListener('change', (e) => {
+            currentDate.setFullYear(parseInt(e.target.value, 10));
+            renderApp();
+          });
+
+          teamSelect.addEventListener('change', renderApp);
+          patternSelect.addEventListener('change', renderApp);
+
+          document.getElementById('prev-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderApp();
+          });
+
+          document.getElementById('next-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderApp();
+          });
+
+          document.getElementById('today-btn').addEventListener('click', () => {
+            currentDate = new Date();
+            renderApp();
+          });
+
+          window._calendarEventsAttached = true;
+        }
       }
 
-      // Event Listeners
-      viewMonthBtn.addEventListener('click', () => {
-        currentView = 'month';
-        viewMonthBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-slate-800";
-        viewYearBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900";
-        updateDisplay();
-      });
-
-      viewYearBtn.addEventListener('click', () => {
-        currentView = 'year';
-        viewYearBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-slate-800";
-        viewMonthBtn.className = "px-3 py-1.5 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900";
-        updateDisplay();
-      });
-
-      yearSelect.addEventListener('change', (e) => {
-        currentDate.setFullYear(parseInt(e.target.value, 10));
-        updateDisplay();
-      });
-
-      teamSelect.addEventListener('change', updateDisplay);
-      patternSelect.addEventListener('change', updateDisplay);
-      anchorDateInput.addEventListener('change', updateDisplay);
-
-      document.getElementById('prev-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        yearSelect.value = currentDate.getFullYear();
-        updateDisplay();
-      });
-
-      document.getElementById('next-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        yearSelect.value = currentDate.getFullYear();
-        updateDisplay();
-      });
-
-      document.getElementById('today-btn').addEventListener('click', () => {
-        currentDate = new Date();
-        yearSelect.value = currentDate.getFullYear();
-        updateDisplay();
-      });
-
-      // Initial execution: automatically renders current real-time month and year
-      updateDisplay();
-    });
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderApp);
+      } else {
+        renderApp();
+      }
+    })();
   </script>
 </body>
 </html>
