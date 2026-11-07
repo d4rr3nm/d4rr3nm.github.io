@@ -45,18 +45,18 @@
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Roster Pattern</label>
           <select id="pattern-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <option value="pattern1">4 Panel Roster (DDOONNNO...)</option>
-            <option value="pattern2">Lifestyle Roster (DDNNOOOO...)</option>
+            <option value="pattern1">Lifestyle Roster</option>
+            <option value="pattern2">4 Panel Roster</option>
           </select>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Shift / Team</label>
           <select id="team-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            <option value="0">Team C (Base Anchor)</option>
-            <option value="7">Team B (+7 Days Offset)</option>
-            <option value="14">Team A (+14 Days Offset)</option>
-            <option value="21">Team D (+21 Days Offset)</option>
+            <option value="0">Team C</option>
+            <option value="7">Team B</option>
+            <option value="14">Team A</option>
+            <option value="21">Team D</option>
           </select>
         </div>
 
@@ -142,8 +142,8 @@
       const ANCHOR_DAY = 12;
 
       const PATTERNS = {
-        pattern1: "DDOONNNOODDOOONNOODDDOONNOOO", // 4 Panel Roster
-        pattern2: "DDNNOOOOODDNNNOOOODDDNNOOOOO"  // Lifestyle Roster
+        pattern1: "DDNNOOOOODDNNNOOOODDDNNOOOOO",  // Lifestyle Roster
+        pattern2: "DDOONNNOODDOOONNOODDDOONNOOO" // 4 Panel Roster
       };
 
       const SHIFT_DETAILS = {
