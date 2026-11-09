@@ -23,6 +23,11 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
+            /* Force exact background colors and text colors when printing */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
@@ -149,7 +154,6 @@
                         <span class="font-medium border-l border-slate-300 pl-1.5 ml-1.5">Off Shift</span>
                     </div>
                 </div>
-               
             </div>
         </section>
 
@@ -227,8 +231,27 @@
 
         <!-- ANNUAL (12-MONTH) VIEW -->
         <div id="view-annual" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-                <h2 id="annual-title" class="text-xl font-black text-slate-900">Annual Shift Roster</h2>
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-2 border-b border-slate-200">
+                <div class="flex flex-wrap items-center gap-4">
+                    <h2 id="annual-title" class="text-xl font-black text-slate-900">Annual Shift Roster</h2>
+                    
+                    <!-- Shift Key Index (Included in Print View) -->
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+                        <div class="flex items-center gap-1 bg-amber-500 text-slate-950 px-2 py-0.5 rounded border border-amber-600">
+                            <span>D</span>
+                            <span class="font-semibold text-[10px] pl-1 border-l border-slate-950/20">Day (12h)</span>
+                        </div>
+                        <div class="flex items-center gap-1 bg-indigo-950 text-white px-2 py-0.5 rounded border border-indigo-900">
+                            <span>N</span>
+                            <span class="font-semibold text-[10px] pl-1 border-l border-white/20">Night (12h)</span>
+                        </div>
+                        <div class="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">
+                            <span>O</span>
+                            <span class="font-normal text-[10px] pl-1 border-l border-slate-300">Off</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex gap-2 no-print">
                     <button id="btn-prev-year" class="p-2 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-700 shadow-sm transition">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
