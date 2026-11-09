@@ -152,7 +152,7 @@
 
                 <!-- Cycle Specs -->
                 <div class="text-xs text-slate-500 font-medium">
-                    Anchor Start: <span class="font-bold text-slate-800">Nov 16, 2026</span> (Day 1)
+                    Anchor Start: <span class="font-bold text-slate-800">Jan 12, 2026</span> (Day 1)
                 </div>
             </div>
         </section>
@@ -252,7 +252,7 @@
     <!-- Footer -->
     <footer class="mt-auto bg-white border-t border-slate-200 py-4 no-print">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 font-medium">
-            28-Day Rotating Shift Roster • Cycle Anchor: November 16, 2026
+            28-Day Rotating Shift Roster • Cycle Anchor: January 12, 2026
         </div>
     </footer>
 
@@ -262,13 +262,14 @@
         const PATTERN = "DDNNOOOOODDNNNOOOODDDNNOOOOO"; // 28 Days Exact
         const CYCLE_LENGTH = 28;
         
-        // Exact Anchor Date: Nov 16, 2026 (Day 0 index, Cycle Day 1)
-        const ANCHOR_DATE = new Date(2026, 10, 16); 
+        // Exact Anchor Date: Jan 12, 2026 (Day 0 index, Cycle Day 1)
+        const ANCHOR_DATE = new Date(2026, 0, 12); 
 
-        // State & Security
+        // State & Security - Initialize to Today's Year and Month
+        const todayDate = new Date();
         let currentView = 'month'; // 'month' | 'year'
-        let selectedYear = 2026;
-        let selectedMonth = 0; // 0 = Jan
+        let selectedYear = todayDate.getFullYear();
+        let selectedMonth = todayDate.getMonth(); // 0 = Jan, 11 = Dec
         let activePasscode = localStorage.getItem('roster_passcode') || null;
 
         // Toast Helper
